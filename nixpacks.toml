@@ -1,8 +1,9 @@
 [phases.setup]
-nixPkgs = ["ffmpeg-full", "python310"]
-
+aptPkgs = ["ffmpeg"]
+ 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
-
+ 
 [start]
 cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+ 
