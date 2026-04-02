@@ -149,6 +149,8 @@ def _ratio_to_fraction(ratio: float, max_denom: int = MAX_RATIO_DENOM):
 
 def convert_scipy(input_path: str, output_path: str, ratio: float) -> str:
     ext = os.path.splitext(input_path)[1].lower()
+
+    # Read audio
     if ext in (".wav", ".flac", ".aiff", ".aif"):
         data, sr = sf.read(input_path, always_2d=True, dtype="float32")
     else:
@@ -156,14 +158,29 @@ def convert_scipy(input_path: str, output_path: str, ratio: float) -> str:
         data = y[:, np.newaxis] if y.ndim == 1 else y.T
 
     logger.info(f"SciPy read: {data.shape[0]} samples x {data.shape[1]} ch @ {sr} Hz")
+
+    # Resample
     up, down = _ratio_to_fraction(ratio)
     logger.info(f"SciPy resample_poly {ratio:.8f} -> {up}/{down}")
     channels = [resample_poly(data[:, ch], up, down).astype(np.float32)
                 for ch in range(data.shape[1])]
     output_data = np.stack(channels, axis=1)
-    final_path = os.path.splitext(output_path)[0] + ".wav"
-    sf.write(final_path, output_data, sr, subtype="FLOAT")
-    logger.info(f"SciPy done: {final_path}")
+
+    # Choose output format: preserve FLAC/WAV losslessly, everything else -> WAV
+    if ext == ".flac":
+        final_path = os.path.splitext(output_path)[0] + ".flac"
+        sf.write(final_path, output_data, sr, format="FLAC", subtype="PCM_24")
+        logger.info(f"SciPy done (FLAC 24-bit): {final_path}")
+    elif ext == ".wav":
+        final_path = os.path.splitext(output_path)[0] + ".wav"
+        sf.write(final_path, output_data, sr, format="WAV", subtype="PCM_24")
+        logger.info(f"SciPy done (WAV 24-bit): {final_path}")
+    else:
+        # MP3/OGG/M4A -> WAV (soundfile cannot encode lossy formats)
+        final_path = os.path.splitext(output_path)[0] + ".wav"
+        sf.write(final_path, output_data, sr, format="WAV", subtype="FLOAT")
+        logger.info(f"SciPy done (WAV float): {final_path}")
+
     return final_path
 
 
@@ -239,12 +256,13 @@ async def tune_audio(background_tasks: BackgroundTasks,
         filename=out_name,
         media_type=mime_type,
         headers={
-            "X-Original-Hz": f"{original_hz:.4f}",
-            "X-Ratio":       f"{ratio:.8f}",
-            "X-Target-Hz":   f"{TARGET_HZ}",
-            "X-Engine":      "ffmpeg" if FFMPEG_AVAILABLE else "scipy",
+            "X-Original-Hz":     f"{original_hz:.4f}",
+            "X-Ratio":           f"{ratio:.8f}",
+            "X-Target-Hz":       f"{TARGET_HZ}",
+            "X-Engine":          "ffmpeg" if FFMPEG_AVAILABLE else "scipy",
+            "Content-Disposition": f'attachment; filename="{out_name}"',
             "Access-Control-Expose-Headers":
-                "X-Original-Hz, X-Ratio, X-Target-Hz, X-Engine",
+                "X-Original-Hz, X-Ratio, X-Target-Hz, X-Engine, Content-Disposition",
         },
     )
 

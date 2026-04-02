@@ -456,7 +456,7 @@
         <span class="drop-text-main">Drop your audio file here</span>
         <span class="drop-text-sub">or click to browse</span>
         <span class="drop-text-formats">MP3 · WAV · FLAC · AIFF · OGG · M4A</span>
-        <input type="file" id="fileInput" accept="audio/*" />
+        <input type="file" id="fileInput" accept="audio/*,.flac,.mp3,.wav,.aiff,.aif,.ogg,.m4a" />
       </div>
 
       <div class="progress-wrap" id="progressWrap">
@@ -625,10 +625,17 @@
         const blob = await response.blob();
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
+        // Use server-provided filename (may differ from input, e.g. MP3 -> WAV)
+        const serverFilename = response.headers.get('Content-Disposition') || '';
+        const matchFn = serverFilename.match(/filename="?([^"]+)"?/);
         const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
-        const ext = selectedFile.name.match(/\.[^/.]+$/) || ['.mp3'];
+        // Derive ext from blob MIME type as fallback
+        const mimeToExt = {'audio/flac':'.flac','audio/wav':'.wav',
+                           'audio/mpeg':'.mp3','audio/mp4':'.m4a'};
+        const fallbackExt = mimeToExt[blob.type] || '.wav';
+        const downloadName = matchFn ? matchFn[1] : `432Hz_${baseName}${fallbackExt}`;
         a.href = url;
-        a.download = `432Hz_${baseName}${ext[0]}`;
+        a.download = downloadName;
         document.body.appendChild(a);
         a.click();
         a.remove();
