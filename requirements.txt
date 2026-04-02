@@ -1,5 +1,5 @@
 # 432Hz Adaptive Tuning Engine
-# FFmpeg is installed via nixpacks.toml (Railway) — not a pip package
+# static-ffmpeg bundles FFmpeg as a pip package - no system install needed
 # pip install -r requirements.txt
  
 fastapi==0.115.6
@@ -11,3 +11,5 @@ numpy==1.26.4
 soundfile==0.12.1
 resampy==0.4.3
 scipy==1.13.1
+static-ffmpeg==2.5
+ 

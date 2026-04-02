@@ -46,12 +46,19 @@ MAX_RATIO_DENOM   = 1000
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("432hz-tuner")
 
-# Detect FFmpeg at startup with full diagnostics
+# Use static-ffmpeg: ships FFmpeg as a pip package, works on every platform
+# and every cloud host without any system-level installation.
+try:
+    import static_ffmpeg
+    static_ffmpeg.add_paths()          # adds bundled ffmpeg/ffprobe to PATH
+    logger.info("static-ffmpeg paths added to PATH")
+except Exception as e:
+    logger.warning(f"static-ffmpeg unavailable: {e}")
+
 FFMPEG_BIN  = shutil.which("ffmpeg")
 FFPROBE_BIN = shutil.which("ffprobe")
 FFMPEG_AVAILABLE = FFMPEG_BIN is not None and FFPROBE_BIN is not None
 
-logger.info(f"PATH        = {os.environ.get('PATH', 'NOT SET')}")
 logger.info(f"ffmpeg  bin = {FFMPEG_BIN}")
 logger.info(f"ffprobe bin = {FFPROBE_BIN}")
 
@@ -255,11 +262,5 @@ async def health():
 @app.get("/")
 async def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
-
-@app.get("/api/debug")
-async def debug():
-    import subprocess
-    result = subprocess.run(["which", "ffmpeg"], capture_output=True, text=True)
-    return {"which_ffmpeg": result.stdout.strip(), "PATH": os.environ.get("PATH")}
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
