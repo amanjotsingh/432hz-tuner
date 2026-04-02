@@ -1,6 +1,5 @@
-# Tells Railway's Nixpacks builder to include FFmpeg
 [phases.setup]
-nixPkgs = ["python310", "ffmpeg"]
+nixPkgs = ["ffmpeg-full", "python310"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
