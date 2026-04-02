@@ -1,0 +1,12 @@
+# 432Hz Adaptive Tuning Engine — Python Dependencies
+# Install with:  pip install -r requirements.txt
+
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+aiofiles==24.1.0
+librosa==0.10.2.post1
+numpy==1.26.4
+soundfile==0.12.1
+resampy==0.4.3
+scipy==1.13.1
