@@ -267,6 +267,59 @@ async def tune_audio(background_tasks: BackgroundTasks,
     )
 
 
+@app.post("/api/detect/")
+async def detect_frequency(file: UploadFile = File(...)):
+    """
+    Detect the master frequency of an uploaded file without converting it.
+    Streams file to a temp location, runs pitch detection, deletes temp file.
+    Returns detected Hz, tuning offset in cents, and the target ratio.
+    """
+    original_name = file.filename or "audio.wav"
+    ext = os.path.splitext(original_name)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=415,
+            detail=f"Unsupported type '{ext}'.")
+
+    file_id    = str(uuid.uuid4())
+    temp_path  = os.path.join(TEMP_DIR, f"{file_id}_detect{ext}")
+
+    # Stream to disk
+    total_bytes = 0
+    async with aiofiles.open(temp_path, "wb") as f_out:
+        while chunk := await file.read(CHUNK_SIZE):
+            total_bytes += len(chunk)
+            if total_bytes > MAX_FILE_SIZE_MB * 1024 * 1024:
+                cleanup_files(temp_path)
+                raise HTTPException(status_code=413, detail="File too large.")
+            await f_out.write(chunk)
+
+    try:
+        loop = asyncio.get_event_loop()
+        f_current = await loop.run_in_executor(
+            None, detect_master_frequency, temp_path)
+    except Exception as e:
+        logger.error(f"Detection error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cleanup_files(temp_path)
+
+    cents_from_440 = 1200 * (f_current / STANDARD_HZ).__class__.__mro__[0]  # placeholder
+    import math
+    cents_from_440 = round(1200 * math.log2(f_current / STANDARD_HZ), 2)
+    cents_to_432   = round(1200 * math.log2(TARGET_HZ  / f_current),  2)
+    ratio          = round(TARGET_HZ / f_current, 8)
+
+    return JSONResponse({
+        "detected_hz":    round(f_current, 4),
+        "standard_hz":    STANDARD_HZ,
+        "target_hz":      TARGET_HZ,
+        "cents_from_440": cents_from_440,
+        "cents_to_432":   cents_to_432,
+        "ratio":          ratio,
+        "engine":         "ffmpeg" if FFMPEG_AVAILABLE else "scipy",
+    })
+
+
 @app.get("/api/health")
 async def health():
     return JSONResponse({

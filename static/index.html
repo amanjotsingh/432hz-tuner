@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Reset & Root ──────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -22,6 +21,7 @@
       --text-dim:  rgba(232, 226, 212, 0.5);
       --green:     #4caf82;
       --red:       #e05a5a;
+      --blue:      #5a9fe0;
       --radius:    14px;
       --font-head: 'Cinzel', serif;
       --font-body: 'Crimson Pro', serif;
@@ -37,15 +37,8 @@
       overflow-x: hidden;
     }
 
-    /* ── Starfield canvas ──────────────────────────────────────────────── */
-    #starfield {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
+    #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-    /* ── Page shell ────────────────────────────────────────────────────── */
     .page {
       position: relative;
       z-index: 1;
@@ -56,14 +49,11 @@
       padding: 60px 24px 80px;
     }
 
-    /* ── Glow orb behind hero ──────────────────────────────────────────── */
     .orb {
       position: fixed;
-      top: -160px;
-      left: 50%;
+      top: -160px; left: 50%;
       transform: translateX(-50%);
-      width: 620px;
-      height: 620px;
+      width: 620px; height: 620px;
       background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
       border-radius: 50%;
       pointer-events: none;
@@ -71,82 +61,186 @@
       animation: orbPulse 8s ease-in-out infinite;
     }
     @keyframes orbPulse {
-      0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
-      50%       { opacity: 1.0; transform: translateX(-50%) scale(1.08); }
+      0%,100% { opacity:0.7; transform:translateX(-50%) scale(1); }
+      50%      { opacity:1.0; transform:translateX(-50%) scale(1.08); }
     }
 
-    /* ── Header ────────────────────────────────────────────────────────── */
-    header {
-      text-align: center;
-      margin-bottom: 56px;
-      animation: fadeDown 1s ease both;
-    }
+    header { text-align: center; margin-bottom: 48px; animation: fadeDown 1s ease both; }
     @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity:0; transform:translateY(-20px); }
+      to   { opacity:1; transform:translateY(0); }
     }
 
     .badge {
       display: inline-block;
       font-family: var(--font-head);
-      font-size: 10px;
-      letter-spacing: 0.3em;
+      font-size: 10px; letter-spacing: 0.3em;
       color: var(--gold);
       border: 1px solid var(--border);
-      padding: 5px 14px;
-      border-radius: 100px;
-      margin-bottom: 22px;
-      text-transform: uppercase;
+      padding: 5px 14px; border-radius: 100px;
+      margin-bottom: 22px; text-transform: uppercase;
     }
 
     h1 {
       font-family: var(--font-head);
       font-size: clamp(2rem, 5vw, 3.4rem);
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: var(--gold-lt);
-      line-height: 1.15;
+      font-weight: 600; letter-spacing: 0.04em;
+      color: var(--gold-lt); line-height: 1.15;
       text-shadow: 0 0 60px rgba(201,168,76,0.3);
     }
 
     .subtitle {
-      margin-top: 14px;
-      font-size: 1.1rem;
-      color: var(--text-dim);
-      font-style: italic;
-      max-width: 480px;
-      margin-inline: auto;
+      margin-top: 14px; font-size: 1.1rem;
+      color: var(--text-dim); font-style: italic;
+      max-width: 480px; margin-inline: auto;
     }
 
-    /* ── Frequency display strip ───────────────────────────────────────── */
+    /* Frequency display strip */
     .freq-strip {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 100px;
       padding: 10px 28px;
-      margin-bottom: 48px;
+      margin-bottom: 32px;
       font-family: var(--font-head);
-      font-size: 0.82rem;
-      letter-spacing: 0.12em;
+      font-size: 0.82rem; letter-spacing: 0.12em;
       animation: fadeDown 1s 0.2s ease both;
     }
-    .freq-strip .hz {
-      color: var(--gold);
+    .freq-strip .hz { color: var(--gold); }
+    .freq-strip .arrow { color: var(--text-dim); }
+    .freq-strip .hz.target { color: var(--gold-lt); }
+
+    /* LIVE FREQUENCY PANEL */
+    .freq-panel {
+      width: 100%; max-width: 600px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.4s ease both;
+      display: none;
     }
-    .freq-strip .arrow {
-      color: var(--text-dim);
-    }
-    .freq-strip .hz.target {
-      color: var(--gold-lt);
+    .freq-panel.show { display: block; }
+
+    .freq-panel-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0;
+      overflow: hidden;
+      position: relative;
     }
 
-    /* ── Upload card ───────────────────────────────────────────────────── */
+    /* Scanning animation while detecting */
+    .freq-panel-inner.scanning::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+        transparent 0%, rgba(201,168,76,0.06) 50%, transparent 100%);
+      animation: scan 1.4s linear infinite;
+    }
+    @keyframes scan {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(100%); }
+    }
+
+    .freq-panel-header {
+      padding: 14px 22px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .freq-panel-title {
+      font-family: var(--font-head);
+      font-size: 0.75rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-dim);
+      flex: 1;
+    }
+    .detect-status {
+      font-size: 0.78rem; font-style: italic;
+      color: var(--gold);
+    }
+    .detect-status.done  { color: var(--green); }
+    .detect-status.error { color: var(--red); }
+
+    /* Big frequency readout */
+    .freq-readout {
+      padding: 22px 22px 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .freq-block { text-align: center; }
+    .freq-block .label {
+      display: block;
+      font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .freq-block .value {
+      font-family: var(--font-head);
+      font-size: 1.9rem;
+      line-height: 1;
+      display: block;
+    }
+    .freq-block .value.detected { color: var(--blue); }
+    .freq-block .value.target   { color: var(--gold-lt); }
+    .freq-block .value.placeholder {
+      color: var(--text-dim);
+      font-size: 1.4rem;
+    }
+    .freq-block .unit {
+      font-size: 0.82rem; color: var(--text-dim);
+      display: block; margin-top: 2px;
+    }
+
+    .freq-arrow {
+      text-align: center;
+      font-size: 1.4rem; color: var(--border);
+    }
+    .freq-arrow.active { color: var(--gold); }
+
+    /* Meter bar */
+    .freq-meter {
+      padding: 0 22px 20px;
+    }
+    .meter-track {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--gold-lt));
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .meter-labels {
+      display: flex; justify-content: space-between;
+      font-size: 0.7rem; color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+
+    /* Tuning detail chips */
+    .freq-chips {
+      padding: 0 22px 18px;
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 0.78rem; color: var(--text-dim);
+    }
+    .chip span { color: var(--text); }
+
+    /* Upload card */
     .card {
-      width: 100%;
-      max-width: 600px;
+      width: 100%; max-width: 600px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -154,551 +248,589 @@
       animation: fadeUp 1s 0.35s ease both;
     }
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity:0; transform:translateY(28px); }
+      to   { opacity:1; transform:translateY(0); }
     }
 
-    /* ── Drop zone ─────────────────────────────────────────────────────── */
     .drop-zone {
       position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 56px 32px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; padding: 48px 32px;
       cursor: pointer;
       border-bottom: 1px solid var(--border);
-      transition: background 0.25s;
-      overflow: hidden;
+      transition: background 0.25s; overflow: hidden;
     }
     .drop-zone::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--gold-dim);
-      opacity: 0;
-      transition: opacity 0.25s;
+      content:''; position:absolute; inset:0;
+      background: var(--gold-dim); opacity:0; transition:opacity 0.25s;
     }
     .drop-zone:hover::before,
-    .drop-zone.drag-over::before {
-      opacity: 1;
-    }
+    .drop-zone.drag-over::before { opacity:1; }
 
-    /* Animated waveform icon */
     .waveform-icon {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 36px;
-      margin-bottom: 4px;
+      display:flex; align-items:flex-end; gap:3px;
+      height:36px; margin-bottom:4px;
     }
     .waveform-icon span {
-      display: block;
-      width: 4px;
-      border-radius: 2px;
-      background: var(--gold);
+      display:block; width:4px; border-radius:2px;
+      background:var(--gold);
       animation: wave 1.4s ease-in-out infinite;
     }
-    .waveform-icon span:nth-child(1) { height: 14px; animation-delay: 0s;    }
-    .waveform-icon span:nth-child(2) { height: 26px; animation-delay: 0.1s;  }
-    .waveform-icon span:nth-child(3) { height: 36px; animation-delay: 0.2s;  }
-    .waveform-icon span:nth-child(4) { height: 22px; animation-delay: 0.3s;  }
-    .waveform-icon span:nth-child(5) { height: 30px; animation-delay: 0.4s;  }
-    .waveform-icon span:nth-child(6) { height: 18px; animation-delay: 0.5s;  }
-    .waveform-icon span:nth-child(7) { height: 28px; animation-delay: 0.25s; }
-    .waveform-icon span:nth-child(8) { height: 12px; animation-delay: 0.15s; }
+    .waveform-icon span:nth-child(1){height:14px;animation-delay:0s}
+    .waveform-icon span:nth-child(2){height:26px;animation-delay:.1s}
+    .waveform-icon span:nth-child(3){height:36px;animation-delay:.2s}
+    .waveform-icon span:nth-child(4){height:22px;animation-delay:.3s}
+    .waveform-icon span:nth-child(5){height:30px;animation-delay:.4s}
+    .waveform-icon span:nth-child(6){height:18px;animation-delay:.5s}
+    .waveform-icon span:nth-child(7){height:28px;animation-delay:.25s}
+    .waveform-icon span:nth-child(8){height:12px;animation-delay:.15s}
     @keyframes wave {
-      0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
-      50%       { transform: scaleY(1);   opacity: 1; }
+      0%,100%{transform:scaleY(.5);opacity:.5}
+      50%{transform:scaleY(1);opacity:1}
     }
 
     .drop-text-main {
-      font-family: var(--font-head);
-      font-size: 1.05rem;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      position: relative;
+      font-family:var(--font-head); font-size:1.05rem;
+      letter-spacing:.06em; color:var(--text); position:relative;
     }
-    .drop-text-sub {
-      font-size: 0.88rem;
-      color: var(--text-dim);
-      position: relative;
-    }
+    .drop-text-sub { font-size:.88rem; color:var(--text-dim); position:relative; }
     .drop-text-formats {
-      font-size: 0.76rem;
-      color: var(--text-dim);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      position: relative;
-      margin-top: 4px;
+      font-size:.76rem; color:var(--text-dim);
+      letter-spacing:.08em; text-transform:uppercase;
+      position:relative; margin-top:4px;
     }
+    #fileInput { display:none; }
 
-    #fileInput { display: none; }
-
-    /* ── Convert button ────────────────────────────────────────────────── */
     .convert-row {
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      padding:20px 24px;
+      display:flex; align-items:center;
+      justify-content:space-between; gap:16px;
     }
-
     .file-name {
-      font-size: 0.9rem;
-      color: var(--gold);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 260px;
-      font-style: italic;
+      font-size:.9rem; color:var(--gold);
+      white-space:nowrap; overflow:hidden;
+      text-overflow:ellipsis; max-width:260px;
+      font-style:italic;
     }
-    .file-name.empty { color: var(--text-dim); }
+    .file-name.empty { color:var(--text-dim); }
 
     .btn-convert {
-      flex-shrink: 0;
-      font-family: var(--font-head);
-      font-size: 0.78rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--bg);
-      background: linear-gradient(135deg, var(--gold-lt), var(--gold));
-      border: none;
-      border-radius: 100px;
-      padding: 12px 28px;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
+      flex-shrink:0;
+      font-family:var(--font-head); font-size:.78rem;
+      letter-spacing:.14em; text-transform:uppercase;
+      color:var(--bg);
+      background:linear-gradient(135deg, var(--gold-lt), var(--gold));
+      border:none; border-radius:100px;
+      padding:12px 28px; cursor:pointer;
+      transition:opacity .2s, transform .15s;
     }
-    .btn-convert:hover:not(:disabled) {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-    .btn-convert:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
+    .btn-convert:hover:not(:disabled) { opacity:.9; transform:translateY(-1px); }
+    .btn-convert:disabled { opacity:.35; cursor:not-allowed; }
 
-    /* ── Progress bar ──────────────────────────────────────────────────── */
-    .progress-wrap {
-      height: 2px;
-      background: rgba(255,255,255,0.06);
-      overflow: hidden;
-      display: none;
-    }
-    .progress-wrap.active { display: block; }
+    .progress-wrap { height:2px; background:rgba(255,255,255,.06); overflow:hidden; display:none; }
+    .progress-wrap.active { display:block; }
     .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--gold), var(--gold-lt));
-      transition: width 0.3s ease;
-      animation: progressIndeterminate 2s linear infinite;
+      height:100%; width:0%;
+      background:linear-gradient(90deg,var(--gold),var(--gold-lt));
+      animation:progressIndeterminate 2s linear infinite;
     }
     @keyframes progressIndeterminate {
-      0%   { transform: translateX(-100%); width: 60%; }
-      100% { transform: translateX(200%);  width: 60%; }
+      0%{transform:translateX(-100%);width:60%}
+      100%{transform:translateX(200%);width:60%}
     }
 
-    /* ── Status / result ───────────────────────────────────────────────── */
+    /* Result box */
     .status-box {
-      margin-top: 28px;
-      width: 100%;
-      max-width: 600px;
-      border-radius: var(--radius);
-      overflow: hidden;
-      animation: fadeUp 0.5s ease both;
-      display: none;
+      margin-top:20px; width:100%; max-width:600px;
+      border-radius:var(--radius); overflow:hidden;
+      animation:fadeUp .5s ease both; display:none;
     }
-    .status-box.show { display: block; }
+    .status-box.show { display:block; }
 
     .status-inner {
-      padding: 22px 28px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      border-radius: var(--radius);
+      padding:22px 28px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      border-radius:var(--radius);
     }
-    .status-inner.success { border-color: rgba(76,175,130,0.4); }
-    .status-inner.error   { border-color: rgba(224,90,90,0.4); }
+    .status-inner.success { border-color:rgba(76,175,130,.4); }
+    .status-inner.error   { border-color:rgba(224,90,90,.4); }
 
     .status-title {
-      font-family: var(--font-head);
-      font-size: 0.82rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
+      font-family:var(--font-head); font-size:.82rem;
+      letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px;
     }
-    .status-inner.success .status-title { color: var(--green); }
-    .status-inner.error   .status-title { color: var(--red);   }
+    .status-inner.success .status-title { color:var(--green); }
+    .status-inner.error   .status-title { color:var(--red); }
 
     .status-details {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 24px;
-      margin-bottom: 16px;
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:8px 24px; margin-bottom:16px;
     }
-    .detail-item { font-size: 0.88rem; }
-    .detail-label { color: var(--text-dim); font-size: 0.78rem; letter-spacing: 0.05em; display: block; }
-    .detail-value { color: var(--text); }
+    .detail-item { font-size:.88rem; }
+    .detail-label { color:var(--text-dim); font-size:.78rem; letter-spacing:.05em; display:block; }
+    .detail-value { color:var(--text); }
 
     .btn-download {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-head);
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--bg);
-      background: linear-gradient(135deg, var(--green), #3a9e6b);
-      border: none;
-      border-radius: 100px;
-      padding: 11px 24px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: opacity 0.2s, transform 0.15s;
+      display:inline-flex; align-items:center; gap:8px;
+      font-family:var(--font-head); font-size:.78rem;
+      letter-spacing:.12em; text-transform:uppercase;
+      color:var(--bg);
+      background:linear-gradient(135deg,var(--green),#3a9e6b);
+      border:none; border-radius:100px;
+      padding:11px 24px; cursor:pointer;
+      text-decoration:none;
+      transition:opacity .2s, transform .15s;
     }
-    .btn-download:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+    .btn-download:hover { opacity:.9; transform:translateY(-1px); }
+    .error-message { color:var(--red); font-size:.92rem; }
 
-    .error-message { color: var(--red); font-size: 0.92rem; }
-
-    /* ── Info panels ───────────────────────────────────────────────────── */
     .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      margin-top: 56px;
-      width: 100%;
-      max-width: 600px;
-      animation: fadeUp 1s 0.55s ease both;
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:16px; margin-top:48px; width:100%; max-width:600px;
+      animation:fadeUp 1s .55s ease both;
     }
-
     .info-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px 20px;
-      text-align: center;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:22px 20px; text-align:center;
     }
     .info-num {
-      font-family: var(--font-head);
-      font-size: 1.8rem;
-      color: var(--gold);
-      display: block;
-      line-height: 1;
-      margin-bottom: 6px;
+      font-family:var(--font-head); font-size:1.8rem;
+      color:var(--gold); display:block; line-height:1; margin-bottom:6px;
     }
-    .info-label {
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
+    .info-label { font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
 
-    /* ── Footer ────────────────────────────────────────────────────────── */
     footer {
-      margin-top: 72px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      animation: fadeUp 1s 0.7s ease both;
+      margin-top:60px; text-align:center;
+      font-size:.8rem; color:var(--text-dim);
+      animation:fadeUp 1s .7s ease both;
     }
-    footer a { color: var(--gold-dim); text-decoration: none; }
 
-    /* ── Spinner for loading state ─────────────────────────────────────── */
     .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(8,11,18,0.3);
-      border-top-color: var(--bg);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      vertical-align: middle;
+      display:inline-block; width:14px; height:14px;
+      border:2px solid rgba(8,11,18,.3);
+      border-top-color:var(--bg);
+      border-radius:50%;
+      animation:spin .8s linear infinite; vertical-align:middle;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .spinner-sm {
+      display:inline-block; width:10px; height:10px;
+      border:1.5px solid rgba(201,168,76,.3);
+      border-top-color:var(--gold);
+      border-radius:50%;
+      animation:spin .8s linear infinite; vertical-align:middle;
+      margin-right:4px;
+    }
   </style>
 </head>
 <body>
 
-  <canvas id="starfield"></canvas>
-  <div class="orb"></div>
+<canvas id="starfield"></canvas>
+<div class="orb"></div>
 
-  <div class="page">
+<div class="page">
 
-    <header>
-      <div class="badge">High-Fidelity DSP Engine</div>
-      <h1>432Hz Adaptive<br>Tuning Engine</h1>
-      <p class="subtitle">
-        Autonomously detects your track's master pitch and performs lossless
-        varispeed conversion to Verdi's A — zero phase distortion, zero artifacts.
-      </p>
-    </header>
+  <header>
+    <div class="badge">High-Fidelity DSP Engine</div>
+    <h1>432Hz Adaptive<br>Tuning Engine</h1>
+    <p class="subtitle">
+      Autonomously detects your track's master pitch and performs lossless
+      varispeed conversion to Verdi's A.
+    </p>
+  </header>
 
-    <!-- Frequency strip -->
-    <div class="freq-strip">
-      <span class="hz">A = 440 Hz</span>
-      <span class="arrow">→</span>
-      <span class="hz target">A = 432 Hz</span>
-    </div>
+  <div class="freq-strip">
+    <span class="hz">A = 440 Hz</span>
+    <span class="arrow">→</span>
+    <span class="hz target">A = 432 Hz</span>
+  </div>
 
-    <!-- Upload card -->
-    <div class="card">
+  <!-- LIVE FREQUENCY PANEL (shown after file selected) -->
+  <div class="freq-panel" id="freqPanel">
+    <div class="freq-panel-inner" id="freqPanelInner">
 
-      <div class="drop-zone" id="dropZone" role="button" tabindex="0"
-           aria-label="Upload audio file">
-        <div class="waveform-icon" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
+      <div class="freq-panel-header">
+        <span class="freq-panel-title">Detected Frequency</span>
+        <span class="detect-status" id="detectStatus">
+          <span class="spinner-sm"></span> Analysing…
+        </span>
+      </div>
+
+      <div class="freq-readout">
+        <div class="freq-block">
+          <span class="label">Current Tuning</span>
+          <span class="value detected" id="detectedHz">—</span>
+          <span class="unit">Hz</span>
         </div>
-        <span class="drop-text-main">Drop your audio file here</span>
-        <span class="drop-text-sub">or click to browse</span>
-        <span class="drop-text-formats">MP3 · WAV · FLAC · AIFF · OGG · M4A</span>
-        <input type="file" id="fileInput" accept="audio/*,.flac,.mp3,.wav,.aiff,.aif,.ogg,.m4a" />
-      </div>
-
-      <div class="progress-wrap" id="progressWrap">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-
-      <div class="convert-row">
-        <span class="file-name empty" id="fileName">No file selected</span>
-        <button class="btn-convert" id="btnConvert" disabled>
-          Convert to 432 Hz
-        </button>
-      </div>
-
-    </div><!-- /.card -->
-
-    <!-- Status / Result box -->
-    <div class="status-box" id="statusBox">
-      <div class="status-inner" id="statusInner">
-        <div class="status-title" id="statusTitle"></div>
-        <div id="statusContent"></div>
-      </div>
-    </div>
-
-    <!-- Info panels -->
-    <div class="info-grid">
-      <div class="info-panel">
-        <span class="info-num">−1.82%</span>
-        <span class="info-label">Tempo change<br>(imperceptible)</span>
-      </div>
-      <div class="info-panel">
-        <span class="info-num">0</span>
-        <span class="info-label">Phase-vocoder<br>artifacts</span>
-      </div>
-      <div class="info-panel">
-        <span class="info-num">libsoxr</span>
-        <span class="info-label">Sinc-interpolated<br>resampling</span>
-      </div>
-    </div>
-
-    <footer>
-      <p>
-        Pitch detection via <strong>Librosa</strong> · Varispeed conversion via
-        <strong>FFmpeg + libsoxr</strong> · Backend: <strong>FastAPI</strong>
-      </p>
-      <p style="margin-top:6px;font-size:0.72rem;">
-        Giuseppe Verdi advocated for A≈432 Hz in 1884.
-        The ISO standard settled on 440 Hz in 1955.
-      </p>
-    </footer>
-
-  </div><!-- /.page -->
-
-  <script>
-    // ── Starfield ──────────────────────────────────────────────────────────────
-    (function () {
-      const canvas = document.getElementById('starfield');
-      const ctx = canvas.getContext('2d');
-      let stars = [];
-      const N = 160;
-
-      function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-
-      function initStars() {
-        stars = Array.from({ length: N }, () => ({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          r: Math.random() * 1.2 + 0.3,
-          a: Math.random(),
-          da: (Math.random() - 0.5) * 0.004,
-        }));
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (const s of stars) {
-          s.a = Math.max(0.05, Math.min(0.9, s.a + s.da));
-          if (s.a <= 0.05 || s.a >= 0.9) s.da *= -1;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(232, 214, 160, ${s.a})`;
-          ctx.fill();
-        }
-        requestAnimationFrame(draw);
-      }
-
-      window.addEventListener('resize', () => { resize(); initStars(); });
-      resize();
-      initStars();
-      draw();
-    })();
-
-    // ── Upload & Convert Logic ─────────────────────────────────────────────────
-    const dropZone   = document.getElementById('dropZone');
-    const fileInput  = document.getElementById('fileInput');
-    const fileNameEl = document.getElementById('fileName');
-    const btnConvert = document.getElementById('btnConvert');
-    const statusBox  = document.getElementById('statusBox');
-    const statusInner= document.getElementById('statusInner');
-    const statusTitle= document.getElementById('statusTitle');
-    const statusContent = document.getElementById('statusContent');
-    const progressWrap = document.getElementById('progressWrap');
-
-    let selectedFile = null;
-
-    function setFile(file) {
-      if (!file) return;
-      selectedFile = file;
-      fileNameEl.textContent = file.name;
-      fileNameEl.classList.remove('empty');
-      btnConvert.disabled = false;
-      statusBox.classList.remove('show');
-    }
-
-    // Click to open file picker
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') fileInput.click();
-    });
-    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
-
-    // Drag & drop
-    dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', e => { dropZone.classList.remove('drag-over'); });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('drag-over');
-      setFile(e.dataTransfer.files[0]);
-    });
-
-    // ── Convert ────────────────────────────────────────────────────────────────
-    btnConvert.addEventListener('click', async () => {
-      if (!selectedFile) return;
-
-      // UI → loading state
-      btnConvert.disabled = true;
-      btnConvert.innerHTML = '<span class="spinner"></span> Processing…';
-      progressWrap.classList.add('active');
-      statusBox.classList.remove('show');
-
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      try {
-        const response = await fetch('/api/tune/', {
-          method: 'POST',
-          body: formData,
-        });
-
-        progressWrap.classList.remove('active');
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
-          showError(err.detail || 'Processing failed.');
-          return;
-        }
-
-        // Read metadata from response headers
-        const origHz  = parseFloat(response.headers.get('X-Original-Hz') || '440');
-        const ratio   = parseFloat(response.headers.get('X-Ratio')       || '0.9818');
-        const targetHz= parseFloat(response.headers.get('X-Target-Hz')   || '432');
-
-        // Trigger download
-        const blob = await response.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        // Use server-provided filename (may differ from input, e.g. MP3 -> WAV)
-        const serverFilename = response.headers.get('Content-Disposition') || '';
-        const matchFn = serverFilename.match(/filename="?([^"]+)"?/);
-        const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
-        // Derive ext from blob MIME type as fallback
-        const mimeToExt = {'audio/flac':'.flac','audio/wav':'.wav',
-                           'audio/mpeg':'.mp3','audio/mp4':'.m4a'};
-        const fallbackExt = mimeToExt[blob.type] || '.wav';
-        const downloadName = matchFn ? matchFn[1] : `432Hz_${baseName}${fallbackExt}`;
-        a.href = url;
-        a.download = downloadName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-
-        showSuccess(origHz, ratio, targetHz, a.download);
-
-      } catch (err) {
-        progressWrap.classList.remove('active');
-        showError('Network error: ' + err.message);
-      } finally {
-        btnConvert.disabled = false;
-        btnConvert.innerHTML = 'Convert to 432 Hz';
-        fileInput.value = '';
-        selectedFile = null;
-        fileNameEl.textContent = 'No file selected';
-        fileNameEl.classList.add('empty');
-      }
-    });
-
-    function showSuccess(origHz, ratio, targetHz, filename) {
-      statusInner.className = 'status-inner success';
-      statusTitle.textContent = '✓  Conversion Complete';
-
-      const centsDiff = (1200 * Math.log2(targetHz / origHz)).toFixed(2);
-      const tempoDiff = ((ratio - 1) * 100).toFixed(3);
-
-      statusContent.innerHTML = `
-        <div class="status-details">
-          <div class="detail-item">
-            <span class="detail-label">Detected Frequency</span>
-            <span class="detail-value">${origHz.toFixed(3)} Hz</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Target Frequency</span>
-            <span class="detail-value">${targetHz.toFixed(1)} Hz</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Pitch Shift</span>
-            <span class="detail-value">${centsDiff} cents</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Tempo Change</span>
-            <span class="detail-value">${tempoDiff}%</span>
-          </div>
+        <div class="freq-arrow" id="freqArrow">→</div>
+        <div class="freq-block">
+          <span class="label">Target (Verdi's A)</span>
+          <span class="value target">432.0</span>
+          <span class="unit">Hz</span>
         </div>
-        <p style="font-size:0.84rem;color:var(--text-dim);margin-bottom:16px;font-style:italic;">
-          Converted via lossless varispeed resampling (FFmpeg + libsoxr).
-          Your download has started automatically.
-        </p>
-        <a class="btn-download" href="#" onclick="return false;">
-          ↓ &nbsp;${filename}
-        </a>
-      `;
-      statusBox.classList.add('show');
+      </div>
+
+      <div class="freq-meter">
+        <div class="meter-track">
+          <div class="meter-fill" id="meterFill"></div>
+        </div>
+        <div class="meter-labels">
+          <span>424 Hz</span>
+          <span>432 Hz ✦</span>
+          <span>440 Hz</span>
+          <span>448 Hz</span>
+        </div>
+      </div>
+
+      <div class="freq-chips" id="freqChips">
+        <div class="chip">Offset from 440 Hz: <span id="chipCents440">—</span></div>
+        <div class="chip">Shift needed: <span id="chipCentsTo432">—</span></div>
+        <div class="chip">Ratio: <span id="chipRatio">—</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Upload card -->
+  <div class="card">
+    <div class="drop-zone" id="dropZone" role="button" tabindex="0">
+      <div class="waveform-icon" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <span class="drop-text-main">Drop your audio file here</span>
+      <span class="drop-text-sub">or click to browse</span>
+      <span class="drop-text-formats">MP3 · WAV · FLAC · AIFF · OGG · M4A</span>
+      <input type="file" id="fileInput"
+             accept="audio/*,.flac,.mp3,.wav,.aiff,.aif,.ogg,.m4a" />
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"></div>
+    </div>
+
+    <div class="convert-row">
+      <span class="file-name empty" id="fileName">No file selected</span>
+      <button class="btn-convert" id="btnConvert" disabled>
+        Convert to 432 Hz
+      </button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="status-box" id="statusBox">
+    <div class="status-inner" id="statusInner">
+      <div class="status-title" id="statusTitle"></div>
+      <div id="statusContent"></div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-panel">
+      <span class="info-num">−1.82%</span>
+      <span class="info-label">Tempo change<br>(imperceptible)</span>
+    </div>
+    <div class="info-panel">
+      <span class="info-num">0</span>
+      <span class="info-label">Phase-vocoder<br>artifacts</span>
+    </div>
+    <div class="info-panel">
+      <span class="info-num">libsoxr</span>
+      <span class="info-label">Sinc-interpolated<br>resampling</span>
+    </div>
+  </div>
+
+  <footer>
+    <p>Pitch detection via <strong>Librosa</strong> · Varispeed via
+       <strong>FFmpeg + libsoxr</strong> or <strong>SciPy</strong></p>
+    <p style="margin-top:6px;font-size:.72rem;">
+      Giuseppe Verdi advocated for A≈432 Hz in 1884.
+      ISO standardised 440 Hz in 1955.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+// Starfield
+(function(){
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  function initStars(){
+    stars = Array.from({length:160},()=>({
+      x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+      r:Math.random()*1.2+0.3, a:Math.random(),
+      da:(Math.random()-0.5)*0.004
+    }));
+  }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const s of stars){
+      s.a=Math.max(0.05,Math.min(0.9,s.a+s.da));
+      if(s.a<=0.05||s.a>=0.9) s.da*=-1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(232,214,160,${s.a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',()=>{resize();initStars();});
+  resize(); initStars(); draw();
+})();
+
+// Elements
+const dropZone     = document.getElementById('dropZone');
+const fileInput    = document.getElementById('fileInput');
+const fileNameEl   = document.getElementById('fileName');
+const btnConvert   = document.getElementById('btnConvert');
+const statusBox    = document.getElementById('statusBox');
+const statusInner  = document.getElementById('statusInner');
+const statusTitle  = document.getElementById('statusTitle');
+const statusContent= document.getElementById('statusContent');
+const progressWrap = document.getElementById('progressWrap');
+
+// Freq panel elements
+const freqPanel      = document.getElementById('freqPanel');
+const freqPanelInner = document.getElementById('freqPanelInner');
+const detectStatus   = document.getElementById('detectStatus');
+const detectedHzEl   = document.getElementById('detectedHz');
+const freqArrow      = document.getElementById('freqArrow');
+const meterFill      = document.getElementById('meterFill');
+const chipCents440   = document.getElementById('chipCents440');
+const chipCentsTo432 = document.getElementById('chipCentsTo432');
+const chipRatio      = document.getElementById('chipRatio');
+
+let selectedFile = null;
+let detectionAbort = null;
+
+// ── File selection ─────────────────────────────────────────────────────────────
+function setFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  fileNameEl.textContent = file.name;
+  fileNameEl.classList.remove('empty');
+  btnConvert.disabled = true;   // disabled until detection completes
+  statusBox.classList.remove('show');
+  startDetection(file);
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') fileInput.click(); });
+fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  setFile(e.dataTransfer.files[0]);
+});
+
+// ── Live frequency detection ───────────────────────────────────────────────────
+async function startDetection(file) {
+  // Cancel any previous in-flight request
+  if (detectionAbort) detectionAbort.abort();
+  detectionAbort = new AbortController();
+
+  // Show panel in scanning state
+  freqPanel.classList.add('show');
+  freqPanelInner.classList.add('scanning');
+  detectStatus.className = 'detect-status';
+  detectStatus.innerHTML = '<span class="spinner-sm"></span> Analysing…';
+  detectedHzEl.textContent = '—';
+  detectedHzEl.className = 'value detected placeholder';
+  freqArrow.classList.remove('active');
+  meterFill.style.width = '0%';
+  chipCents440.textContent   = '—';
+  chipCentsTo432.textContent = '—';
+  chipRatio.textContent      = '—';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/detect/', {
+      method: 'POST',
+      body: formData,
+      signal: detectionAbort.signal,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Detection failed');
     }
 
-    function showError(msg) {
-      statusInner.className = 'status-inner error';
-      statusTitle.textContent = '⚠  Conversion Failed';
-      statusContent.innerHTML = `<p class="error-message">${msg}</p>`;
-      statusBox.classList.add('show');
+    const data = await res.json();
+    showDetectedFrequency(data);
+    btnConvert.disabled = false;
+
+  } catch (err) {
+    if (err.name === 'AbortError') return;   // cancelled by new file selection
+    freqPanelInner.classList.remove('scanning');
+    detectStatus.className = 'detect-status error';
+    detectStatus.textContent = '⚠ Detection failed';
+    detectedHzEl.textContent = '?';
+    // Still allow conversion attempt
+    btnConvert.disabled = false;
+  }
+}
+
+function showDetectedFrequency(data) {
+  freqPanelInner.classList.remove('scanning');
+
+  const hz = data.detected_hz;
+
+  // Determine if track is sharp, flat, or close to 432
+  const diffFrom432 = hz - 432;
+  let statusText, statusClass;
+  if (Math.abs(diffFrom432) < 0.5) {
+    statusText = '✓ Already near 432 Hz';
+    statusClass = 'detect-status done';
+  } else if (hz > 432) {
+    statusText = `↓ ${diffFrom432.toFixed(2)} Hz above target`;
+    statusClass = 'detect-status';
+  } else {
+    statusText = `↑ ${Math.abs(diffFrom432).toFixed(2)} Hz below target`;
+    statusClass = 'detect-status';
+  }
+  detectStatus.className = statusClass;
+  detectStatus.textContent = statusText;
+
+  // Big Hz readout — animate counting up
+  animateValue(detectedHzEl, 0, hz, 800);
+  detectedHzEl.className = 'value detected';
+  freqArrow.classList.add('active');
+
+  // Meter: map 424–448 Hz range to 0–100%
+  const MIN_HZ = 424, MAX_HZ = 448;
+  const pct = Math.min(100, Math.max(0,
+    ((hz - MIN_HZ) / (MAX_HZ - MIN_HZ)) * 100
+  ));
+  meterFill.style.width = pct + '%';
+
+  // Chips
+  const sign440 = data.cents_from_440 >= 0 ? '+' : '';
+  const signTo432 = data.cents_to_432 >= 0 ? '+' : '';
+  chipCents440.textContent   = `${sign440}${data.cents_from_440} cents`;
+  chipCentsTo432.textContent = `${signTo432}${data.cents_to_432} cents`;
+  chipRatio.textContent      = data.ratio.toFixed(6);
+}
+
+function animateValue(el, start, end, duration) {
+  const startTime = performance.now();
+  function update(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);  // ease-out cubic
+    const val = start + (end - start) * eased;
+    el.textContent = val.toFixed(2);
+    if (t < 1) requestAnimationFrame(update);
+    else el.textContent = end.toFixed(2);
+  }
+  requestAnimationFrame(update);
+}
+
+// ── Convert ────────────────────────────────────────────────────────────────────
+btnConvert.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  btnConvert.disabled = true;
+  btnConvert.innerHTML = '<span class="spinner"></span> Processing…';
+  progressWrap.classList.add('active');
+  statusBox.classList.remove('show');
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const response = await fetch('/api/tune/', { method: 'POST', body: formData });
+    progressWrap.classList.remove('active');
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      showError(err.detail || 'Processing failed.');
+      return;
     }
-  </script>
+
+    const origHz   = parseFloat(response.headers.get('X-Original-Hz') || '440');
+    const ratio    = parseFloat(response.headers.get('X-Ratio') || '0.9818');
+    const targetHz = parseFloat(response.headers.get('X-Target-Hz') || '432');
+    const engine   = response.headers.get('X-Engine') || 'scipy';
+
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+
+    const serverFilename = response.headers.get('Content-Disposition') || '';
+    const matchFn = serverFilename.match(/filename="?([^"]+)"?/);
+    const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
+    const mimeToExt = {'audio/flac':'.flac','audio/wav':'.wav',
+                       'audio/mpeg':'.mp3','audio/mp4':'.m4a'};
+    const fallbackExt = mimeToExt[blob.type] || '.wav';
+    const downloadName = matchFn ? matchFn[1] : `432Hz_${baseName}${fallbackExt}`;
+
+    a.href = url; a.download = downloadName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    showSuccess(origHz, ratio, targetHz, engine, downloadName);
+
+  } catch (err) {
+    progressWrap.classList.remove('active');
+    showError('Network error: ' + err.message);
+  } finally {
+    btnConvert.disabled = false;
+    btnConvert.innerHTML = 'Convert to 432 Hz';
+    fileInput.value = '';
+    selectedFile = null;
+    fileNameEl.textContent = 'No file selected';
+    fileNameEl.classList.add('empty');
+  }
+});
+
+function showSuccess(origHz, ratio, targetHz, engine, filename) {
+  statusInner.className = 'status-inner success';
+  statusTitle.textContent = '✓  Conversion Complete';
+  const centsDiff = (1200 * Math.log2(targetHz / origHz)).toFixed(2);
+  const tempoDiff = ((ratio - 1) * 100).toFixed(3);
+  statusContent.innerHTML = `
+    <div class="status-details">
+      <div class="detail-item">
+        <span class="detail-label">Detected Frequency</span>
+        <span class="detail-value">${origHz.toFixed(3)} Hz</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Target Frequency</span>
+        <span class="detail-value">${targetHz.toFixed(1)} Hz</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Pitch Shift</span>
+        <span class="detail-value">${centsDiff} cents</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Tempo Change</span>
+        <span class="detail-value">${tempoDiff}%</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Engine</span>
+        <span class="detail-value">${engine === 'ffmpeg' ? 'FFmpeg + libsoxr' : 'SciPy resample_poly'}</span>
+      </div>
+    </div>
+    <p style="font-size:.84rem;color:var(--text-dim);margin-bottom:16px;font-style:italic;">
+      Converted via lossless varispeed resampling. Your download has started.
+    </p>
+    <a class="btn-download" href="#">↓ &nbsp;${filename}</a>
+  `;
+  statusBox.classList.add('show');
+}
+
+function showError(msg) {
+  statusInner.className = 'status-inner error';
+  statusTitle.textContent = '⚠  Error';
+  statusContent.innerHTML = `<p class="error-message">${msg}</p>`;
+  statusBox.classList.add('show');
+}
+</script>
 </body>
 </html>
