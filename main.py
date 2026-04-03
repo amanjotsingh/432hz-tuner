@@ -15,6 +15,7 @@ import os
 import uuid
 import asyncio
 import logging
+import math
 import shutil
 import subprocess
 from fractions import Fraction
@@ -249,18 +250,33 @@ async def tune_audio(background_tasks: BackgroundTasks,
                  ".mp3": "audio/mpeg", ".m4a": "audio/mp4"}
     mime_type = mime_map.get(out_ext, "audio/wav")
 
+    # HTTP headers must be latin-1 encodable.
+    # Filenames with curly quotes, em-dashes etc. crash with UnicodeEncodeError.
+    def ascii_filename(name: str) -> str:
+        replacements = {
+            "\u2018": "'", "\u2019": "'",
+            "\u201c": '"', "\u201d": '"',
+            "\u2013": "-", "\u2014": "-",
+            "\u2026": "...",
+        }
+        for char, repl in replacements.items():
+            name = name.replace(char, repl)
+        return name.encode("latin-1", errors="ignore").decode("latin-1")
+
+    safe_name = ascii_filename(out_name)
+
     background_tasks.add_task(cleanup_files, input_path, final_output)
 
     return FileResponse(
         path=final_output,
-        filename=out_name,
+        filename=safe_name,
         media_type=mime_type,
         headers={
             "X-Original-Hz":     f"{original_hz:.4f}",
             "X-Ratio":           f"{ratio:.8f}",
             "X-Target-Hz":       f"{TARGET_HZ}",
             "X-Engine":          "ffmpeg" if FFMPEG_AVAILABLE else "scipy",
-            "Content-Disposition": f'attachment; filename="{out_name}"',
+            "Content-Disposition": f'attachment; filename="{safe_name}"',
             "Access-Control-Expose-Headers":
                 "X-Original-Hz, X-Ratio, X-Target-Hz, X-Engine, Content-Disposition",
         },
@@ -303,8 +319,6 @@ async def detect_frequency(file: UploadFile = File(...)):
     finally:
         cleanup_files(temp_path)
 
-    cents_from_440 = 1200 * (f_current / STANDARD_HZ).__class__.__mro__[0]  # placeholder
-    import math
     cents_from_440 = round(1200 * math.log2(f_current / STANDARD_HZ), 2)
     cents_to_432   = round(1200 * math.log2(TARGET_HZ  / f_current),  2)
     ratio          = round(TARGET_HZ / f_current, 8)
